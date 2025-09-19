@@ -10,3 +10,59 @@ services:
       - ./app:/app
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DB_HOST=auth-db
+      - DB_PORT=5432
+      - DB_NAME=auth
+      - DB_USER=user
+      - DB_PASSWORD=password
+    depends_on:
+      auth-db:
+        condition: service_healthy
+      users-db:
+        condition: service_healthy
+
+  auth-db:
+    image: postgres:17-alpine
+    container_name: postgres-auth-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: auth
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d auth -q"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - dev-db-data:/var/lib/postgresql/data
+
+  users-db:
+    image: mysql:8.0.29
+    container_name: mysql-users-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: users
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -u root -ppassword || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - mysqldata:/var/lib/mysql
+
+volumes:
+  dev-db-data:
+  mysqldata:
