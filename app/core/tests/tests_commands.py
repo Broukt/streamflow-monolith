@@ -16,9 +16,12 @@ class CommandTests(SimpleTestCase):
         """Create per-alias connection mocks backed by the patched handler."""
 
         connection_mocks = {
-            alias: MagicMock(name=f"{alias}_connection") for alias in DATABASE_ALIASES
+            alias: MagicMock(name=f"{alias}_connection")
+            for alias in DATABASE_ALIASES
         }
-        patched_connections.__getitem__.side_effect = connection_mocks.__getitem__
+        patched_connections.__getitem__.side_effect = (
+            connection_mocks.__getitem__
+        )
         return connection_mocks
 
     @patch("core.management.commands.wait_for_dbs.connections")
@@ -48,7 +51,9 @@ class CommandTests(SimpleTestCase):
 
         call_command("wait_for_dbs")
 
-        self.assertEqual(connection_mocks["auth"].ensure_connection.call_count, 6)
+        self.assertEqual(
+            connection_mocks["auth"].ensure_connection.call_count, 6
+        )
         for alias in [alias for alias in DATABASE_ALIASES if alias != "auth"]:
             connection_mocks[alias].ensure_connection.assert_called_once_with()
 
